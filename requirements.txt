@@ -1,0 +1,4 @@
+gunicorn==19.6.0
+Flask==0.11.1
+
+flask-helpers
