@@ -1,0 +1,76 @@
+#%RAML 0.8
+title: Write Only Runbook API Service
+version: v1
+mediaType: application/json
+baseUri: /api/{version}
+schemas:
+  - 2xx: !include schemas/2xx.json
+  - 4xx: !include schemas/4xx.json
+
+/region:
+  /{region}:
+    uriParameters:
+      region:
+        description: Region name which is region identifier
+        type: string
+
+    /runbooks:
+      post:
+        description: Create a new runbook
+        body:
+          application/json:
+            formParameters: !include forms/runbook.yaml
+        responses:
+          201:
+            body:
+              schema: 2xx
+          400:
+            body:
+              schema: 4xx
+
+      /{runbook_id}:
+        uriParameters:
+          runbook_id:
+            description: Id of a particular runbook
+            type: string
+        put:
+          description: Update contents of a runbook
+          body:
+            application/json:
+              formParameters: !include forms/runbook.yaml
+          responses:
+            200:
+              body:
+                schema: 2xx
+            400:
+              body:
+                schema: 4xx
+            404:
+              body:
+                schema: 4xx
+        delete:
+          description: Delete a runbook
+          responses:
+            204:
+              body:
+                schema: 2xx
+            404:
+              body:
+                schema: 4xx
+        /run:
+          post:
+            description: Schedule a run of the runbook
+            responses:
+              202:
+                body:
+                  schema: 2xx
+              404:
+                body:
+                  schema: 4xx
+/regions:
+  get:
+    description: List of regions
+    responses:
+      200:
+        body:
+          schema: 2xx
