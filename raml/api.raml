@@ -1,0 +1,88 @@
+#%RAML 0.8
+title: Runbook API Service
+version: v1
+mediaType: application/json
+baseUri: /api/{version}
+schemas:
+  - 2xx: !include schemas/2xx.json
+  - 4xx: !include schemas/4xx.json
+
+/region:
+  /{region}:
+    uriParameters:
+      region:
+        description: Region name which is region identifier
+        type: string
+
+    /runbooks:
+      get:
+        description: List all runbooks for current region
+        responses:
+          200:
+            body:
+              schema: 2xx
+      post:
+        description: Create a new runbook
+        responses:
+          201:
+            body:
+              schema: 2xx
+
+      /{runbook_id}:
+        uriParameters:
+          runbook_id:
+            description: Id of a particular runbook
+            type: string
+        get:
+          description: Get a particular runbook
+          responses:
+            200:
+              body:
+                schema: 2xx
+        put:
+          description: Update contents of a runbook
+          responses:
+            200:
+              body:
+                schema: 2xx
+        delete:
+          description: Delete a runbook
+          responses:
+            204:
+              body:
+                schema: 2xx
+        /run:
+          post:
+            description: Schedule a run of the runbook
+            responses:
+              202:
+                body:
+                  schema: 2xx
+        /runs:
+          get:
+            description: Get list of all runs of a runbook
+            responses:
+              200:
+                body:
+                  schema: 2xx
+          /{run_id}:
+            uriParameters:
+              run_id:
+                description: id of a runbook run
+                type: string
+            get:
+              description: Get information and description of a run of the runbook
+              responses:
+                200:
+                  body:
+                    schema: 2xx
+                404:
+                  body:
+                    schema: 4xx
+/regions:
+  get:
+    description: List of regions
+    responses:
+      200:
+        body:
+          schema: 2xx
