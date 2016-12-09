@@ -16,9 +16,45 @@
 import json
 import logging
 import os
+import sys
+
+import jsonschema
 
 
-config = None
+CONF = None
+DEFAULT_CONF = {
+    "flask": {
+        "HOST": "0.0.0.0",
+        "PORT": 5000,
+        "DEBUG": False
+    },
+    "backend": {
+        "elastic": "http://127.0.0.1:9200/",
+    },
+}
+
+CONF_SCHEMA = {
+    "type": "object",
+    "$schema": "http://json-schema.org/draft-04/schema",
+    "properties": {
+        "flask": {
+            "type": "object"
+        },
+        "backend": {
+            "type": "object",
+            "properties": {
+                "elastic": {
+                    "type": "string"
+                }
+            },
+            "required": ["elastic"]
+        },
+    },
+    "additionalProperties": False
+}
+
+
+CONF = None
 
 
 def get_config():
@@ -27,19 +63,22 @@ def get_config():
     :returns: application config
     :rtype: dict
     """
-    global config
-    if not config:
+    global CONF
+    if not CONF:
         path = os.environ.get("RUNBOOK_CONF", "/etc/runbook/config.json")
         try:
-            config = json.load(open(path))
+            CONF = json.load(open(path))
             logging.info("Config is '%s'" % path)
         except IOError as e:
             logging.warning("Config at '%s': %s" % (path, e))
-            config = {
-                "flask": {
-                    "HOST": "0.0.0.0",
-                    "PORT": 5000,
-                    "DEBUG": False
-                }
-            }
-    return config
+            CONF = DEFAULT_CONF
+    try:
+        jsonschema.validate(CONF, CONF_SCHEMA)
+    except jsonschema.ValidationError as e:
+        logging.error(e.message)
+        sys.exit(1)
+    except jsonschema.SchemaError as e:
+        logging.error(e)
+        sys.exit(1)
+    else:
+        return CONF
