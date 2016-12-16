@@ -13,15 +13,22 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+
+import functools
+
 import flask
 
-bp = flask.Blueprint("runbooks", __name__)
+from runbook import config
 
 
-@bp.route("/<region>")
-def get_region_runbooks(region):
-        return flask.jsonify("fixme!")
+def check_regions(func):
+    regions = set(config.get_config()["regions"])
 
+    @functools.wraps(func)
+    def checker(region, *args, **kwargs):
+        if region not in regions:
+            return flask.jsonify(
+                {"error": "Region {} Not Found".format(region)}), 404
+        return func(region, *args, **kwargs)
 
-def get_blueprints():
-    return [["/runbooks", bp]]
+    return checker

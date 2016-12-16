@@ -13,12 +13,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import logging
 
 import flask
 from flask_helpers import routing
 
-from runbook.api.v1 import runbook as runbook_api
+from runbook.api.v1 import runbook_ as runbook_api
 from runbook import config
+
+
+CONF = config.get_config()
+APP_CONF = CONF.get("flask", {})
 
 
 app = flask.Flask(__name__, static_folder=None)
@@ -32,8 +37,14 @@ def versions():
 
 @app.errorhandler(404)
 def not_found(error):
+    logging.error(error)
     return flask.jsonify({"error": "Not Found"}), 404
 
+
+@app.errorhandler(500)
+def handle_500(error):
+    logging.error(error)
+    return flask.jsonify({"error": "Internal Server Error"}), 500
 
 for bp in [runbook_api]:
     for url_prefix, blueprint in bp.get_blueprints():
@@ -44,7 +55,8 @@ app = routing.add_routing_map(app, html_uri=None, json_uri="/")
 
 
 def main():
-    app.run()
+    app.run(host=APP_CONF.get("HOST", "0.0.0.0"),
+            port=APP_CONF.get("PORT", "5000"))
 
 
 if __name__ == "__main__":
