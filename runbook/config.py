@@ -38,17 +38,44 @@ CONF_SCHEMA = {
     "$schema": "http://json-schema.org/draft-04/schema",
     "properties": {
         "flask": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "PORT": {"type": "integer"},
+                "HOST": {"type": "string"},
+                "DEBUG": {"type": "boolean"}
+            },
         },
         "backend": {
             "type": "object",
             "properties": {
-                "elastic": {
-                    "type": "string"
-                }
+                "type": {"type": "string"},
+                "connection": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "host": {"type": "string"},
+                            "port": {"type": "integer"}
+                        },
+                        "required": ["host"]
+                    },
+                    "minItems": 1
+                },
             },
-            "required": ["elastic"]
+            "required": ["type", "connection"]
         },
+        "regions": {
+            "type": "array",
+            "items": {
+                "type": "string",
+            },
+        },
+        "logging": {
+            "type": "object",
+            "properties": {
+                "level": {"type": "string"}
+            }
+        }
     },
     "additionalProperties": False
 }
