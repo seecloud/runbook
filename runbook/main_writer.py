@@ -18,7 +18,7 @@ import logging
 import flask
 from flask_helpers import routing
 
-from runbook.api.v1 import runbook as runbook_api
+from runbook.api.v1.writer import runbook_ as runbook_api
 from runbook import config
 
 
