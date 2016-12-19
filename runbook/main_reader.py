@@ -18,7 +18,8 @@ import logging
 import flask
 from flask_helpers import routing
 
-from runbook.api.v1 import runbook as runbook_api
+from runbook.api.v1.reader import run as run_api
+from runbook.api.v1.reader import runbook_ as runbook_api
 from runbook import config
 
 
@@ -46,7 +47,7 @@ def handle_500(error):
     return flask.jsonify({"error": "Internal Server Error"}), 500
 
 
-for bp in [runbook_api]:
+for bp in [runbook_api, run_api]:
     for url_prefix, blueprint in bp.get_blueprints():
         app.register_blueprint(blueprint, url_prefix="/api/v1%s" % url_prefix)
 
