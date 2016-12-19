@@ -1,5 +1,5 @@
-M ubuntu:16.04
-MAINTAINER Boris Pavlovic <bpavlovic@mirantis.com>
+FROM ubuntu:16.04
+MAINTAINER Kirill Zaitsev <k.zaitsev@me.com>
 
 RUN apt-get update && apt-get install --yes wget git-core python-dev build-essential
 
@@ -18,5 +18,5 @@ RUN pip install -r requirements.txt
 WORKDIR /app/runbook
 EXPOSE 5000
 
-ENTRYPOINT ["gunicorn"]
-CMD ["-w", "4", "-b", "0.0.0.0:5000", "main:app"]
+ENTRYPOINT ["bash"]
+CMD ["main.sh"]

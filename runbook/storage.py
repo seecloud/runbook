@@ -15,6 +15,7 @@
 
 import json
 import logging
+import os
 
 import elasticsearch
 
@@ -79,6 +80,8 @@ def ensure_index(index, api_type):
             mapping = json.dumps(ES_MAPPINGS)
             LOG.info("Creating Elasticsearch index: {}".format(index))
             es.indices.create(index, body=mapping)
+        else:
+            LOG.info("Elasticsearch index: '{}' already exists".format(index))
     except elasticsearch.exceptions.ElasticsearchException:
         LOG.exception("Was unable to get or create index: {}".format(index))
         raise
@@ -92,4 +95,5 @@ def configure_regions(api_type="writer"):
 
 
 if __name__ == "__main__":
-    configure_regions()
+    api_type = os.environ.get("RUNBOOK_INIT_INDICES_FOR", "writer")
+    configure_regions(api_type)
