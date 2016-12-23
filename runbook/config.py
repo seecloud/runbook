@@ -16,30 +16,119 @@
 import json
 import logging
 import os
+import sys
+
+import jsonschema
 
 
-config = None
+CONF = {
+    "reader": None,
+    "writer": None
+}
+
+DEFAULT_CONF = {
+    "reader": {
+        "flask": {
+            "HOST": "0.0.0.0",
+            "PORT": 5000,
+            "DEBUG": False
+        },
+        "backend": {
+            "type": "elastic",
+            "connection": [{"host": "127.0.0.1", "port": 9200}]
+        },
+        "regions": [],
+    },
+    "writer": {
+        "flask": {
+            "HOST": "0.0.0.0",
+            "PORT": 5001,
+            "DEBUG": False
+        },
+        "backend": {
+            "type": "elastic",
+            "connection": [{"host": "127.0.0.1", "port": 9200}]
+        },
+        "regions": [],
+    }
+}
 
 
-def get_config():
+CONF_SCHEMA = {
+    "type": "object",
+    "$schema": "http://json-schema.org/draft-04/schema",
+    "properties": {
+        "flask": {
+            "type": "object",
+            "properties": {
+                "PORT": {"type": "integer"},
+                "HOST": {"type": "string"},
+                "DEBUG": {"type": "boolean"}
+            },
+        },
+        "backend": {
+            "type": "object",
+            "properties": {
+                "type": {"type": "string"},
+                "connection": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "host": {"type": "string"},
+                            "port": {"type": "integer"}
+                        },
+                        "required": ["host"]
+                    },
+                    "minItems": 1
+                },
+            },
+            "required": ["type", "connection"]
+        },
+        "regions": {
+            "type": "array",
+            "items": {
+                "type": "string",
+            },
+        },
+        "logging": {
+            "type": "object",
+            "properties": {
+                "level": {"type": "string"}
+            }
+        }
+    },
+    "additionalProperties": False
+}
+
+
+def get_config(api_type=None):
     """Return cached configuration.
 
     :returns: application config
     :rtype: dict
     """
-    global config
-    if not config:
-        path = os.environ.get("RUNBOOK_CONF", "/etc/runbook/config.json")
+    if api_type not in ["reader", "writer"]:
+        raise RuntimeError("Unknown api type '{}'".format(api_type))
+
+    global CONF
+    if not CONF[api_type]:
+        path = os.environ.get(
+            "RUNBOOK_{}_CONF".format(api_type.upper()),
+            "/etc/runbook/{}-config.json".format(api_type))
         try:
-            config = json.load(open(path))
+            CONF[api_type] = json.load(open(path))
             logging.info("Config is '%s'" % path)
         except IOError as e:
             logging.warning("Config at '%s': %s" % (path, e))
-            config = {
-                "flask": {
-                    "HOST": "0.0.0.0",
-                    "PORT": 5000,
-                    "DEBUG": False
-                }
-            }
-    return config
+            CONF[api_type] = DEFAULT_CONF[api_type]
+    try:
+        jsonschema.validate(CONF[api_type], CONF_SCHEMA)
+    except jsonschema.ValidationError as e:
+        logging.error(e.message)
+        sys.exit(1)
+    except jsonschema.SchemaError as e:
+        logging.error(e)
+        sys.exit(1)
+    else:
+        return CONF[api_type]
