@@ -39,7 +39,8 @@ ES_MAPPINGS = {
                         "default": {"type": "keyword"},
                         "type": {"type": "keyword"},
                     }
-                }
+                },
+                "deleted": {"type": "boolean"},
             }
         },
         "run": {
