@@ -1,0 +1,11 @@
+configs:
+  runbook:
+    port:
+      cont: 5000
+    debug: false
+    wsgi:
+      workers: 4
+sources:
+  seecloud/runbook:
+    git_url: http://github.com/seecloud/runbook
+    git_ref: master

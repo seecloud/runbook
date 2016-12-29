@@ -1,0 +1,29 @@
+dsl_version: 0.1.0
+service:
+  name: runbook-api
+  ports:
+    - {{ runbook.port }}
+  containers:
+    - name: runbook-api
+      image: runbook
+      probes:
+        readiness:
+          type: "httpGet"
+          port: {{ runbook.port.cont }}
+          path: "/"
+        liveness:
+          command: "true"
+          type: "exec"
+      daemon:
+        command: gunicorn
+                 --name runbook-api
+                 --workers {{ runbook.wsgi.workers }}
+                 --bind 0.0.0.0:{{ runbook.port.cont }}
+                 runbook.main:app
+        files:
+          - runbook.conf
+
+files:
+  runbook.conf:
+    path: /etc/runbook/config.json
+    content: runbook.conf.j2

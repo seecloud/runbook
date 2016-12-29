@@ -1,0 +1,13 @@
+FROM {{ image_spec("base-tools") }}
+MAINTAINER {{ maintainer }}
+
+{{ copy_sources("seecloud/runbook", "/runbook") }}
+
+RUN apt-get update && apt-get install --yes wget git-core python-dev build-essential
+
+RUN wget https://bootstrap.pypa.io/get-pip.py && \
+  python get-pip.py && \
+  rm -f get-pip.py
+
+RUN pip install -r /runbook/requirements.txt \
+    && pip install --upgrade /runbook
