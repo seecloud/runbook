@@ -23,7 +23,8 @@ import jsonschema
 
 CONF = {
     "reader": None,
-    "writer": None
+    "writer": None,
+    "runner": None,
 }
 
 DEFAULT_CONF = {
@@ -50,7 +51,19 @@ DEFAULT_CONF = {
             "connection": [{"host": "127.0.0.1", "port": 9200}]
         },
         "regions": [],
-    }
+    },
+    "runner": {
+        "flask": {
+            "HOST": "0.0.0.0",
+            "PORT": 5002,
+            "DEBUG": False
+        },
+        "backend": {
+            "type": "elastic",
+            "connection": [{"host": "127.0.0.1", "port": 9200}]
+        },
+        "regions": [],
+    },
 }
 
 
@@ -108,7 +121,7 @@ def get_config(api_type=None):
     :returns: application config
     :rtype: dict
     """
-    if api_type not in ["reader", "writer"]:
+    if api_type not in ["reader", "writer", "runner"]:
         raise RuntimeError("Unknown api type '{}'".format(api_type))
 
     global CONF
