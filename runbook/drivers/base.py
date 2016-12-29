@@ -18,7 +18,7 @@ class Driver(object):
 
     interpreters = {
         "bash": "/bin/bash",
-        "python": "/bin/python",
+        "python": "/usr/bin/python",
     }
 
     @classmethod

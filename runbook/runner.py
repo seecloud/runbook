@@ -32,6 +32,7 @@ eventlet.monkey_patch()
 API_TYPE = "runner"
 CONF = config.get_config(API_TYPE)
 POOL = eventlet.GreenPool()
+DRIVER = None
 
 LOG = logging.getLogger("runner")
 LOG.setLevel(logging.INFO)
@@ -80,7 +81,7 @@ def handle_hit(hit, index_name, driver):
                         hit["_source"], hit["_id"]))
         return False
 
-    parameters = hit.get("parameters", {})
+    parameters = hit["_source"].get("parameters", {})
     try:
         runbook = hit['inner_hits']['parent']['hits']['hits'][0]["_source"]
     except (IndexError, KeyError):
@@ -97,7 +98,6 @@ def handle_hit(hit, index_name, driver):
     LOG.info("Finished run '{}': '{}'".format(hit['_id'], run_result))
 
     end_status = "finished" if run_result.get("return_code") == 0 else "failed"
-    # end_status = "scheduled"  # FIXME
 
     now = datetime.datetime.now()
     try:
@@ -122,15 +122,7 @@ def handle_hit(hit, index_name, driver):
 
 
 def job():
-    driver_name = CONF.get("driver", "shell")
-    try:
-        driver_module = importlib.import_module(
-            "runbook.drivers." + driver_name)
-    except ImportError:
-        LOG.critical("No driver named '{}'".format(driver_name))
-        return
-
-    driver = driver_module.Driver
+    driver = DRIVER
 
     es = storage.get_elasticsearch(API_TYPE)
     for region in CONF["regions"]:
@@ -141,11 +133,25 @@ def job():
         result = es.search(index=index_name,
                            doc_type="run",
                            body=query)
+        LOG.info("Got {} results for region {}".format(
+            len(result['hits']['hits']), region))
         for hit in result['hits']['hits']:
             POOL.spawn_n(handle_hit, hit, index_name, driver)
 
 
 def main():
+    driver_name = CONF.get("driver", "docker_images")
+    try:
+        driver_module = importlib.import_module(
+            "runbook.drivers." + driver_name)
+    except ImportError:
+        LOG.critical("No driver named '{}'".format(driver_name))
+        return
+
+    driver = driver_module.Driver
+    driver.initialise()
+    global DRIVER
+    DRIVER = driver
 
     run_every_seconds = CONF.get("run_every_seconds", 30)
     schedule.every(run_every_seconds).seconds.do(job)

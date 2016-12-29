@@ -21,6 +21,8 @@ import tempfile
 
 from runbook.drivers import base
 
+LOG = logging.getLogger("runner.shell")
+
 
 class Driver(base.Driver):
 
@@ -30,7 +32,7 @@ class Driver(base.Driver):
 
     @classmethod
     def run(cls, runbook, parameters):
-        logging.info("Running runbook '{}' with parameters '{}'".format(
+        LOG.info("Running runbook '{}' with parameters '{}'".format(
             runbook, parameters))
         f = tempfile.NamedTemporaryFile()
         f.write(runbook["runbook"])
