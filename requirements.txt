@@ -4,3 +4,6 @@ flask-helpers==0.1
 gunicorn==19.6.0
 jsonschema>=2.0.0,!=2.5.0,<3.0.0                       # MIT
 six==1.10.0
+schedule==0.4.2
+eventlet==0.20.0
+docker==2.0.0
